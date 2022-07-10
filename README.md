@@ -9,7 +9,7 @@ SkriptX transpiles an object-oriented strictly-typed and sauced up syntax to Skr
 class Main {
   int init() {
     broadcast "Hello, world!";
-    global persistant string Testvar = "I am a variable stored in the skript variables.csv file!";
+    stored string Testvar = "I am a variable stored in the skript variables.csv file!";
     global string Tempvar = "I am stored only in memory!";
     local string Localvar = "I am stored only in memory and the current scope!";
     broadcast "%Testvar%";

@@ -1,0 +1,26 @@
+{
+  "name": "skriptx",
+  "version": "1.0.0",
+  "description": "SkriptX transpiles an object-oriented strictly-typed and sauced up syntax to Skript",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethanrettinger/SkriptX.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ethanrettinger/SkriptX/issues"
+  },
+  "homepage": "https://github.com/ethanrettinger/SkriptX#readme",
+  "dependencies": {
+    "chalk": "^5.0.1",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
+}
