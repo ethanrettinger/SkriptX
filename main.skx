@@ -1,1 +1,14 @@
-private Text[] LocalTextArray = ["Item One", "Item Two", "Item Three"];
+class Main {
+	Number init() {
+		private Text HelloWorld = "Hello, world!";
+		global Text hi = "Hello!";
+		Number init2() {
+			Number init3() {
+				private boolean Hello = false;
+				return Hello;
+			}
+			return 0;
+		}
+		return 0;
+	}
+}

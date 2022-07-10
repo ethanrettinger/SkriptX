@@ -16,14 +16,16 @@ export default function tokenize(str) {
 		if(toks[i].startsWith('"')) {
 			lookahead = true;
 			stringBuilder = [];
-		} else if (toks[i].endsWith('"') && lookahead) {
+		}
+		if (toks[i].endsWith('"') && lookahead) {
 			lookahead = false;
 			stringBuilder.push(toks[i]);
 			tokens.push({
 				value: stringBuilder.join(' '),
-				tokenType: 'StringLiteral',
-				type: 'String'
+				tokenType: 'TextLiteral',
+				type: 'Text'
 			});
+			stringBuilder = [];
 			continue;
 		}
 		if(lookahead) {
@@ -48,7 +50,8 @@ const KEYWORDS = [
 	'import',
 	'global',
 	'private',
-	'persistant'
+	'persistant',
+	'return'
 ]
 const TYPES = [
 	'Attribute',	'Biome',	'Block',	'BlockData',
@@ -63,7 +66,8 @@ const TYPES = [
 	'InventoryAction',						'InventorySlot',
 	'InventoryType',			'Item',		'Material',
 	'ItemType',		'LivingEntity',			'Location',
-	'MetadataHolder',			'Money',	'Object',
+	'MetadataHolder',			'Money',	'Number',
+	'Object',
 	'OfflinePlayer',			'Player',	'PotionEffect',
 	'PotionEffectType',						'Projectile',
 	'Region',		'ResourcePackState',	'ServerIcon',
@@ -93,15 +97,27 @@ const LOGICAL_OPERATORS = [
 	'&&', '&&', '!'
 ]
 // TODO: Refactor operator token checks to use guard cases
+let scope = 'Global';
+let scopeBreadcrumb = ['Global'];
 function typify(tokens) {
 	token: for(let i = 0; i < tokens.length; i++) {
 		type: for(let typeIndex = 0; typeIndex < TYPES.length; typeIndex++) {
 			if(tokens[i].value === TYPES[typeIndex] || tokens[i].value === `${TYPES[typeIndex]}[]`) {
 				tokens[i].tokenType = 'Type'
+				tokens[i].scope = scope;
 				tokens[i].type = tokens[i].value === TYPES[typeIndex] ? TYPES[typeIndex] : `${TYPES[typeIndex]}Array`;
 				try {
-					tokens[i+1].tokenType = 'Identifier'
-					tokens[i+1].type = tokens[i].type;
+					if(tokens[i+1].value.endsWith(')')) {
+						tokens[i+1].tokenType = 'IdentifierFunction';
+						tokens[i+1].type = 'Function';
+						tokens[i+1].returnType = tokens[i].type
+						
+					} else {
+						tokens[i+1].tokenType = 'Identifier'
+						tokens[i+1].type = tokens[i].type;
+			
+					}
+					tokens[i+1].scope = scope;
 				} catch (err) {
 					console.log(SyntaxError(`No specified identifier for type ("${tokens[i].value}")`))
 				}
@@ -112,6 +128,7 @@ function typify(tokens) {
 			if(tokens[i].value === ASSIGNMENT_OPERATORS[j]) {
 				tokens[i].tokenType = 'AssignmentOperator',
 				tokens[i].type = 'Operator'
+				tokens[i].scope = scope;
 				continue token;
 			}
 		}
@@ -119,6 +136,7 @@ function typify(tokens) {
 			if(tokens[i].value === ARITHMETIC_OPERATORS[j]) {
 				tokens[i].tokenType = 'ArithmeticOperator';
 				tokens[i].type = 'Operator';
+				tokens[i].scope = scope;
 				continue token;
 			}
 		}
@@ -126,6 +144,7 @@ function typify(tokens) {
 			if(tokens[i].value === COMPARISON_OPERATORS[j]) {
 				tokens[i].tokenType = 'ComparisonOperator';
 				tokens[i].type = 'Operator';
+				tokens[i].scope = scope;
 				continue token;
 			}
 		}
@@ -133,6 +152,7 @@ function typify(tokens) {
 			if(tokens[i].value === LOGICAL_OPERATORS[j]) {
 				tokens[i].tokenType = 'LogicalOperator';
 				tokens[i].type = 'Operator';
+				tokens[i].scope = scope;
 				continue token;
 			}
 		}
@@ -140,7 +160,32 @@ function typify(tokens) {
 			if(tokens[i].value !== KEYWORDS[j]) continue keywords;
 			tokens[i].tokenType = 'Keyword';
 			tokens[i].type = 'Keyword';
+			tokens[i].scope = scope;
+			if(tokens[i].value === 'class') {
+				try {
+					tokens[i+1].tokenType = 'Identifier';
+					tokens[i+1].type = 'Identifier';
+					tokens[i+1].scope = scope;
+				} catch(err) {
+					SyntaxError("Invalid identifier for class definition")
+				}
+			}
 			continue token;
+		}
+		if(!isNaN(tokens[i].value)) {
+			tokens[i].tokenType = 'NumericLiteral';
+			tokens[i].type = 'Number';
+			tokens[i].scope = scope;
+			continue token;
+		}
+		if(tokens[i].value === '{') {
+			tokens[i].scope = scope;
+			scope = tokens[i-1].value;
+			scopeBreadcrumb.push(tokens[i-1].value);
+		} else if (tokens[i].value === '}') {
+			tokens[i].scope = scope;
+			scopeBreadcrumb.pop();
+			scope = scopeBreadcrumb.at(-1)
 		}
 	}
 	return tokens;
